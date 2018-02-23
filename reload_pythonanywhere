@@ -1,0 +1,88 @@
+import requests
+from bs4 import BeautifulSoup
+
+user=''
+password=''
+url="https://www.pythonanywhere.com/login/"#登录页
+url2="https://www.pythonanywhere.com/user/%s/webapps/"%user#web栏
+url3="https://www.pythonanywhere.com/user/%s/webapps/%s.pythonanywhere.com/extend"%(user,user)#post reload按钮
+url4="https://www.pythonanywhere.com/user/%s/tasks_tab/"%user# 计划任务页面
+url5="https://www.pythonanywhere.com/user/%s/schedule/task/85680/extend"%user #post 定时任务延期
+headers = {#post
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate, br',
+        'Accept-Language':'zh_CN,zh;q=0.9',
+        'Connection':'keep-alive',
+        'Host':'www.pythonanywhere.com',
+        'Referer':'https://www.pythonanywhere.com/login/',
+        'User-Agent': 'Mozilla/5.0(WindowsNT10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+           }
+headers2 = {#get
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate, br',
+        'Accept-Language':'zh_CN,zh;q=0.9',
+        'Connection':'keep-alive',
+        'Host':'www.pythonanywhere.com',
+        'User-Agent': 'Mozilla/5.0(WindowsNT10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+           }
+headers3 = {#post2
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate, br',
+        'Accept-Language':'zh_CN,zh;q=0.9',
+        'Connection':'keep-alive',
+        'Host':'www.pythonanywhere.com',
+        'Referer':'https://www.pythonanywhere.com/user/%s/webapps/'%user,
+        'User-Agent': 'Mozilla/5.0(WindowsNT10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+           }
+headers5 = {#get
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate, br',
+        'Accept-Language':'zh_CN,zh;q=0.9',
+        'Connection':'keep-alive',
+        'Host':'www.pythonanywhere.com',
+        'Referer':'https://www.pythonanywhere.com/user/%s/webapps/'%user,
+        'User-Agent': 'Mozilla/5.0(WindowsNT10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+           }
+session = requests.Session()
+
+login_page=session.get(url,headers=headers2).text
+soup = BeautifulSoup(login_page, 'html.parser')
+csrf=soup.find(attrs={'name':'csrfmiddlewaretoken'})['value']
+login_step=soup.find(attrs={'name':'login_view-current_step'})['value']
+data={'auth-username':user,'auth-password':password,'login_view-current_step':login_step,
+      'csrfmiddlewaretoken':csrf}
+#获取需要的数据
+
+s = session.post(url, data=data, headers=headers)
+
+s2=session.get(url2, headers=headers2)
+page2=s2.text
+soup = BeautifulSoup(page2, 'html.parser')
+csrf2=soup.find(attrs={'name':'csrfmiddlewaretoken'})['value']
+data2={'csrfmiddlewaretoken':csrf2}
+#得到第二个data
+
+s3=session.post(url3, data=data2,headers=headers3)
+if "Run until 3 months from today" in s3.text:
+    print("1:Success!")
+else:
+    print("1:Error")
+
+#开始延续计划任务
+s3=session.get(url4, headers=headers5)
+
+headers4 = {#post3
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate, br',
+        'Accept-Language':'zh_CN,zh;q=0.9',
+        'Connection':'keep-alive',
+        'Host':'www.pythonanywhere.com',
+        'Referer':'https://www.pythonanywhere.com/user/%s/tasks_tab/'%user,
+        'User-Agent': 'Mozilla/5.0(WindowsNT10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+        'X-CSRFToken':csrf2,
+           }
+s4=session.post(url5,headers=headers4)
+if 'success' in s4.text:
+    print("2:Success!")
+else:
+    print("2:Error")
